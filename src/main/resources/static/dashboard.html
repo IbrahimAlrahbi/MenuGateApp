@@ -1,0 +1,432 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard — MenuGate</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-stone-50 min-h-screen">
+
+<!-- Navbar -->
+<nav class="bg-white border-b border-stone-200 sticky top-0 z-40">
+    <div class="max-w-6xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between">
+        <a href="/dashboard.html" class="flex items-center gap-2">
+            <span class="text-2xl">🍽️</span>
+            <span class="text-xl font-black text-stone-900 tracking-tight">MenuGate</span>
+        </a>
+        <div class="flex items-center gap-3">
+            <a id="adminLink" href="/admin.html" class="hidden text-sm text-amber-600 hover:text-amber-700 font-medium transition-colors">Admin</a>
+            <span id="userChip" class="hidden sm:inline text-xs text-stone-500 bg-stone-100 px-3 py-1.5 rounded-full font-medium max-w-[180px] truncate"></span>
+            <button id="logoutBtn" class="text-sm text-stone-500 hover:text-red-500 transition-colors font-medium">Sign out</button>
+        </div>
+    </div>
+</nav>
+
+<!-- Main -->
+<main class="max-w-6xl mx-auto px-4 sm:px-6 py-8">
+    <div class="flex items-center justify-between mb-8">
+        <div>
+            <h1 class="text-2xl sm:text-3xl font-black text-stone-900">My Menus</h1>
+            <p class="text-stone-500 text-sm mt-1">Create and manage your restaurant menus</p>
+        </div>
+        <button id="newMenuBtn"
+                class="bg-amber-500 hover:bg-amber-600 active:bg-amber-700 text-white px-5 py-2.5 rounded-xl font-semibold transition-colors shadow-sm text-sm">
+            + New Menu
+        </button>
+    </div>
+
+    <!-- Loading -->
+    <div id="loadingState" class="text-center py-20 text-stone-400">
+        <div class="text-4xl mb-3 animate-pulse">🍴</div>
+        <p class="text-sm">Loading your menus…</p>
+    </div>
+
+    <!-- Empty -->
+    <div id="emptyState" class="hidden text-center py-20">
+        <div class="text-6xl mb-4">🍴</div>
+        <p class="text-lg font-semibold text-stone-700">No menus yet</p>
+        <p class="text-stone-400 text-sm mt-1">Click <strong>+ New Menu</strong> to create your first one.</p>
+    </div>
+
+    <!-- Grid -->
+    <div id="menusGrid" class="hidden grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"></div>
+</main>
+
+<!-- ─── Modal: Create / Edit Menu ─────────────────────────────────────── -->
+<div id="menuModal" class="hidden fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+    <div class="bg-white rounded-2xl shadow-2xl w-full max-w-md p-6">
+        <h2 id="menuModalTitle" class="text-xl font-bold text-stone-900 mb-5">New Menu</h2>
+        <div class="space-y-4">
+            <div>
+                <label class="block text-sm font-semibold text-stone-700 mb-1.5">Title <span class="text-red-400">*</span></label>
+                <input id="menuTitleInput" type="text" placeholder="e.g. Dinner Menu"
+                       class="w-full border border-stone-300 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-amber-400 focus:border-transparent transition-shadow">
+            </div>
+            <div>
+                <label class="block text-sm font-semibold text-stone-700 mb-1.5">Category</label>
+                <input id="menuCategoryInput" type="text" placeholder="e.g. Italian, Breakfast, Drinks"
+                       class="w-full border border-stone-300 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-amber-400 focus:border-transparent transition-shadow">
+            </div>
+        </div>
+        <div class="flex gap-3 mt-6">
+            <button id="cancelMenuModal"
+                    class="flex-1 border border-stone-300 text-stone-700 py-2.5 rounded-xl text-sm font-medium hover:bg-stone-50 transition-colors">
+                Cancel
+            </button>
+            <button id="saveMenuBtn"
+                    class="flex-1 bg-amber-500 hover:bg-amber-600 text-white py-2.5 rounded-xl text-sm font-semibold transition-colors">
+                Save Menu
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- ─── Modal: Add / Edit Item ─────────────────────────────────────────── -->
+<div id="itemModal" class="hidden fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+    <div class="bg-white rounded-2xl shadow-2xl w-full max-w-md p-6">
+        <h2 id="itemModalTitle" class="text-xl font-bold text-stone-900 mb-5">Add Item</h2>
+        <div class="space-y-4">
+            <div>
+                <label class="block text-sm font-semibold text-stone-700 mb-1.5">Name <span class="text-red-400">*</span></label>
+                <input id="itemNameInput" type="text" placeholder="e.g. Margherita Pizza"
+                       class="w-full border border-stone-300 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-amber-400 focus:border-transparent transition-shadow">
+            </div>
+            <div>
+                <label class="block text-sm font-semibold text-stone-700 mb-1.5">Description</label>
+                <textarea id="itemDescInput" rows="2" placeholder="Fresh tomatoes, mozzarella, basil…"
+                          class="w-full border border-stone-300 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-amber-400 focus:border-transparent transition-shadow resize-none"></textarea>
+            </div>
+            <div>
+                <label class="block text-sm font-semibold text-stone-700 mb-1.5">Price <span class="text-red-400">*</span></label>
+                <div class="relative">
+                    <span class="absolute left-4 top-1/2 -translate-y-1/2 text-stone-400 font-medium text-sm">$</span>
+                    <input id="itemPriceInput" type="number" step="0.01" min="0.01" placeholder="0.00"
+                           class="w-full border border-stone-300 rounded-xl pl-8 pr-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-amber-400 focus:border-transparent transition-shadow">
+                </div>
+            </div>
+        </div>
+        <div class="flex gap-3 mt-6">
+            <button id="cancelItemModal"
+                    class="flex-1 border border-stone-300 text-stone-700 py-2.5 rounded-xl text-sm font-medium hover:bg-stone-50 transition-colors">
+                Cancel
+            </button>
+            <button id="saveItemBtn"
+                    class="flex-1 bg-amber-500 hover:bg-amber-600 text-white py-2.5 rounded-xl text-sm font-semibold transition-colors">
+                Save Item
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- Toast -->
+<div id="toast"
+     class="hidden fixed bottom-6 right-6 text-white px-5 py-3 rounded-xl shadow-xl z-50 text-sm font-medium transition-all pointer-events-none">
+</div>
+
+<script type="module">
+import { api, checkAuth, logout } from '/js/api.js';
+
+// ─── State ───────────────────────────────────────────────────────────────────
+let currentUser = null;
+let menuStore   = {};   // menuId → MenuResponse
+let editMenuId  = null; // null = creating, number = editing
+let editItemId  = null; // null = adding,   number = editing
+let itemMenuId  = null; // which menu the item modal belongs to
+
+// ─── Boot ─────────────────────────────────────────────────────────────────────
+async function init() {
+    currentUser = await checkAuth();
+    if (!currentUser) return;
+
+    document.getElementById('userChip').textContent = currentUser.email;
+    if (currentUser.roles.includes('ROLE_ADMIN')) {
+        document.getElementById('adminLink').classList.remove('hidden');
+    }
+
+    await loadMenus();
+}
+
+// ─── Data ─────────────────────────────────────────────────────────────────────
+async function loadMenus() {
+    const res = await api.menus.list();
+    if (!res) return;
+
+    const all = await res.json();
+    const mine = all.filter(m => m.ownerEmail === currentUser.email);
+
+    menuStore = {};
+    mine.forEach(m => { menuStore[m.menuId] = m; });
+
+    render(mine);
+}
+
+// ─── Render ───────────────────────────────────────────────────────────────────
+function render(menus) {
+    const grid    = document.getElementById('menusGrid');
+    const empty   = document.getElementById('emptyState');
+    const loading = document.getElementById('loadingState');
+
+    loading.classList.add('hidden');
+
+    if (menus.length === 0) {
+        empty.classList.remove('hidden');
+        grid.classList.add('hidden');
+        grid.innerHTML = '';
+        return;
+    }
+
+    empty.classList.add('hidden');
+    grid.classList.remove('hidden');
+    grid.innerHTML = menus.map(cardHtml).join('');
+}
+
+function cardHtml(m) {
+    const cat = m.category
+        ? `<span class="text-xs bg-amber-100 text-amber-700 px-2.5 py-1 rounded-full font-medium">${esc(m.category)}</span>`
+        : '';
+    const itemCount = (m.items || []).length;
+
+    return `
+    <div class="bg-white rounded-2xl shadow-md flex flex-col overflow-hidden" id="card-${m.menuId}">
+        <!-- Card header -->
+        <div class="p-5 flex-1">
+            <h3 class="font-bold text-stone-900 text-lg leading-snug">${esc(m.title)}</h3>
+            <div class="flex items-center gap-2 mt-1.5">
+                ${cat}
+                <span class="text-xs text-stone-400">${itemCount} item${itemCount !== 1 ? 's' : ''}</span>
+            </div>
+
+            <!-- Action row -->
+            <div class="flex flex-wrap gap-2 mt-4">
+                <button data-action="toggle-items" data-menu="${m.menuId}"
+                        class="flex-1 min-w-[80px] text-xs border border-stone-200 text-stone-600 py-1.5 px-3 rounded-lg hover:bg-stone-50 transition-colors">
+                    Items ▾
+                </button>
+                <a href="/menu.html?id=${m.menuId}" target="_blank"
+                   class="text-xs border border-stone-200 text-stone-600 py-1.5 px-3 rounded-lg hover:bg-stone-50 transition-colors">
+                    View ↗
+                </a>
+                <button data-action="edit-menu" data-menu="${m.menuId}"
+                        class="text-xs border border-amber-200 text-amber-600 py-1.5 px-3 rounded-lg hover:bg-amber-50 transition-colors">
+                    Edit
+                </button>
+                <button data-action="delete-menu" data-menu="${m.menuId}"
+                        class="text-xs border border-red-200 text-red-500 py-1.5 px-3 rounded-lg hover:bg-red-50 transition-colors">
+                    Delete
+                </button>
+            </div>
+        </div>
+
+        <!-- Items panel -->
+        <div id="items-panel-${m.menuId}" class="hidden border-t border-stone-100">
+            <div id="items-list-${m.menuId}" class="divide-y divide-stone-100 px-5">
+                ${itemsHtml(m)}
+            </div>
+            <!-- Add item trigger -->
+            <div class="px-5 py-3 bg-stone-50 border-t border-stone-100">
+                <button data-action="open-add-item" data-menu="${m.menuId}"
+                        class="w-full text-xs text-amber-600 hover:text-amber-700 font-semibold py-1 transition-colors">
+                    + Add Item
+                </button>
+            </div>
+        </div>
+    </div>`;
+}
+
+function itemsHtml(m) {
+    if (!m.items || m.items.length === 0) {
+        return `<p class="text-xs text-stone-400 py-4 text-center">No items yet.</p>`;
+    }
+    return m.items.map(item => `
+        <div class="flex items-start gap-3 py-3" id="item-row-${m.menuId}-${item.menuItemId}">
+            <div class="flex-1 min-w-0">
+                <div class="flex items-center gap-2">
+                    <span class="text-sm font-semibold text-stone-800">${esc(item.name)}</span>
+                    ${!item.available ? `<span class="text-xs bg-stone-100 text-stone-400 px-2 py-0.5 rounded-full">Off</span>` : ''}
+                </div>
+                ${item.description ? `<p class="text-xs text-stone-400 mt-0.5 line-clamp-1">${esc(item.description)}</p>` : ''}
+            </div>
+            <div class="flex items-center gap-2 flex-shrink-0">
+                <span class="text-sm font-bold text-amber-600">$${Number(item.price).toFixed(2)}</span>
+                <button data-action="edit-item" data-menu="${m.menuId}" data-item="${item.menuItemId}"
+                        class="text-xs text-stone-400 hover:text-amber-500 transition-colors">Edit</button>
+                <button data-action="delete-item" data-menu="${m.menuId}" data-item="${item.menuItemId}"
+                        class="text-xs text-stone-400 hover:text-red-500 transition-colors">✕</button>
+            </div>
+        </div>`
+    ).join('');
+}
+
+// ─── Event delegation (grid) ─────────────────────────────────────────────────
+document.getElementById('menusGrid').addEventListener('click', async (e) => {
+    const btn = e.target.closest('[data-action]');
+    if (!btn) return;
+
+    const action = btn.dataset.action;
+    const menuId = Number(btn.dataset.menu);
+    const itemId = Number(btn.dataset.item);
+
+    if (action === 'toggle-items') {
+        const panel = document.getElementById(`items-panel-${menuId}`);
+        const open  = panel.classList.toggle('hidden') === false;
+        btn.textContent = open ? 'Items ▴' : 'Items ▾';
+    }
+
+    if (action === 'edit-menu') {
+        const m = menuStore[menuId];
+        editMenuId = menuId;
+        document.getElementById('menuModalTitle').textContent = 'Edit Menu';
+        document.getElementById('menuTitleInput').value    = m.title;
+        document.getElementById('menuCategoryInput').value = m.category || '';
+        document.getElementById('menuModal').classList.remove('hidden');
+    }
+
+    if (action === 'delete-menu') {
+        if (!confirm('Delete this menu and all its items?')) return;
+        const res = await api.menus.delete(menuId);
+        if (!res) return;
+        showToast('Menu deleted');
+        await loadMenus();
+    }
+
+    if (action === 'open-add-item') {
+        itemMenuId = menuId;
+        editItemId = null;
+        document.getElementById('itemModalTitle').textContent = 'Add Item';
+        document.getElementById('itemNameInput').value  = '';
+        document.getElementById('itemDescInput').value  = '';
+        document.getElementById('itemPriceInput').value = '';
+        document.getElementById('itemModal').classList.remove('hidden');
+    }
+
+    if (action === 'edit-item') {
+        const menu = menuStore[menuId];
+        const item = menu.items.find(i => i.menuItemId === itemId);
+        if (!item) return;
+        itemMenuId = menuId;
+        editItemId = itemId;
+        document.getElementById('itemModalTitle').textContent = 'Edit Item';
+        document.getElementById('itemNameInput').value  = item.name;
+        document.getElementById('itemDescInput').value  = item.description || '';
+        document.getElementById('itemPriceInput').value = item.price;
+        document.getElementById('itemModal').classList.remove('hidden');
+    }
+
+    if (action === 'delete-item') {
+        if (!confirm('Delete this item?')) return;
+        const wasOpen = !document.getElementById(`items-panel-${menuId}`).classList.contains('hidden');
+        const res = await api.items.delete(menuId, itemId);
+        if (!res) return;
+        showToast('Item deleted');
+        await loadMenus();
+        if (wasOpen) openPanel(menuId);
+    }
+});
+
+// ─── Menu modal ───────────────────────────────────────────────────────────────
+document.getElementById('newMenuBtn').addEventListener('click', () => {
+    editMenuId = null;
+    document.getElementById('menuModalTitle').textContent = 'New Menu';
+    document.getElementById('menuTitleInput').value    = '';
+    document.getElementById('menuCategoryInput').value = '';
+    document.getElementById('menuModal').classList.remove('hidden');
+    document.getElementById('menuTitleInput').focus();
+});
+
+document.getElementById('cancelMenuModal').addEventListener('click', () => {
+    document.getElementById('menuModal').classList.add('hidden');
+});
+
+document.getElementById('menuModal').addEventListener('click', function (e) {
+    if (e.target === this) this.classList.add('hidden');
+});
+
+document.getElementById('saveMenuBtn').addEventListener('click', async () => {
+    const title    = document.getElementById('menuTitleInput').value.trim();
+    const category = document.getElementById('menuCategoryInput').value.trim() || null;
+    if (!title) { showToast('Title is required', 'error'); return; }
+
+    const res = editMenuId
+        ? await api.menus.update(editMenuId, { title, category })
+        : await api.menus.create({ title, category });
+
+    if (!res) return;
+    if (!res.ok) {
+        const err = await res.json().catch(() => ({}));
+        showToast(err.message || 'Could not save menu', 'error');
+        return;
+    }
+
+    document.getElementById('menuModal').classList.add('hidden');
+    showToast(editMenuId ? 'Menu updated ✓' : 'Menu created ✓');
+    await loadMenus();
+});
+
+// ─── Item modal ───────────────────────────────────────────────────────────────
+document.getElementById('cancelItemModal').addEventListener('click', () => {
+    document.getElementById('itemModal').classList.add('hidden');
+});
+
+document.getElementById('itemModal').addEventListener('click', function (e) {
+    if (e.target === this) this.classList.add('hidden');
+});
+
+document.getElementById('saveItemBtn').addEventListener('click', async () => {
+    const name        = document.getElementById('itemNameInput').value.trim();
+    const description = document.getElementById('itemDescInput').value.trim() || null;
+    const price       = parseFloat(document.getElementById('itemPriceInput').value);
+
+    if (!name)                          { showToast('Item name is required', 'error'); return; }
+    if (isNaN(price) || price <= 0)     { showToast('Price must be a positive number', 'error'); return; }
+
+    const wasOpen = itemMenuId != null &&
+        !document.getElementById(`items-panel-${itemMenuId}`)?.classList.contains('hidden');
+
+    const res = editItemId
+        ? await api.items.update(itemMenuId, editItemId, { name, description, price })
+        : await api.items.add(itemMenuId, { name, description, price });
+
+    if (!res) return;
+    if (!res.ok) {
+        const err = await res.json().catch(() => ({}));
+        showToast(err.message || 'Could not save item', 'error');
+        return;
+    }
+
+    document.getElementById('itemModal').classList.add('hidden');
+    showToast(editItemId ? 'Item updated ✓' : 'Item added ✓');
+    await loadMenus();
+    if (wasOpen || !editItemId) openPanel(itemMenuId);
+});
+
+// ─── Helpers ──────────────────────────────────────────────────────────────────
+function openPanel(menuId) {
+    const panel = document.getElementById(`items-panel-${menuId}`);
+    const btn   = document.querySelector(`[data-action="toggle-items"][data-menu="${menuId}"]`);
+    if (panel) panel.classList.remove('hidden');
+    if (btn)   btn.textContent = 'Items ▴';
+}
+
+function esc(str) {
+    if (!str) return '';
+    return str.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+}
+
+let toastTimer;
+function showToast(msg, type = 'success') {
+    const t = document.getElementById('toast');
+    t.textContent = msg;
+    t.className = `fixed bottom-6 right-6 text-white px-5 py-3 rounded-xl shadow-xl z-50 text-sm font-medium pointer-events-none
+        ${type === 'error' ? 'bg-red-500' : 'bg-stone-800'}`;
+    t.classList.remove('hidden');
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(() => t.classList.add('hidden'), 3000);
+}
+
+document.getElementById('logoutBtn').addEventListener('click', logout);
+
+init();
+</script>
+</body>
+</html>

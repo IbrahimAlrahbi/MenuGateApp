@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Menu — MenuGate</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-stone-50 min-h-screen">
+
+<!-- Header -->
+<header class="bg-white border-b border-stone-200">
+    <div class="max-w-2xl mx-auto px-4 sm:px-6 h-14 flex items-center justify-between">
+        <a href="/index.html" class="flex items-center gap-2 text-stone-700 hover:text-stone-900 transition-colors">
+            <span class="text-xl">🍽️</span>
+            <span class="font-black text-base tracking-tight">MenuGate</span>
+        </a>
+        <a href="/oauth2/authorization/google"
+           class="text-xs bg-amber-500 hover:bg-amber-600 text-white px-4 py-2 rounded-full font-semibold transition-colors">
+            Sign in
+        </a>
+    </div>
+</header>
+
+<!-- Content -->
+<main class="max-w-2xl mx-auto px-4 sm:px-6 py-10">
+
+    <!-- Loading -->
+    <div id="loadingState" class="text-center py-20 text-stone-400">
+        <div class="text-4xl mb-3 animate-pulse">🍴</div>
+        <p class="text-sm">Loading menu…</p>
+    </div>
+
+    <!-- Error -->
+    <div id="errorState" class="hidden text-center py-20">
+        <div class="text-5xl mb-4">😕</div>
+        <p class="text-lg font-semibold text-stone-700">Menu not found</p>
+        <p class="text-stone-400 text-sm mt-1">This menu may have been removed or the link is invalid.</p>
+        <a href="/index.html" class="inline-block mt-6 text-sm text-amber-600 hover:underline">← Back to MenuGate</a>
+    </div>
+
+    <!-- Menu content -->
+    <div id="menuContent" class="hidden">
+        <!-- Menu header card -->
+        <div class="bg-white rounded-2xl shadow-md p-6 mb-6">
+            <div class="flex items-start justify-between gap-4">
+                <div>
+                    <h1 id="menuTitle" class="text-2xl sm:text-3xl font-black text-stone-900"></h1>
+                    <div class="flex items-center gap-3 mt-2">
+                        <span id="menuCategory" class="hidden text-sm bg-amber-100 text-amber-700 px-3 py-1 rounded-full font-medium"></span>
+                        <span id="menuItemCount" class="text-sm text-stone-400"></span>
+                    </div>
+                </div>
+                <span class="text-3xl flex-shrink-0">🍽️</span>
+            </div>
+        </div>
+
+        <!-- Filter -->
+        <div class="flex items-center justify-between mb-4">
+            <h2 class="text-sm font-bold text-stone-500 uppercase tracking-wide">Menu Items</h2>
+            <label class="flex items-center gap-2 cursor-pointer select-none">
+                <div class="relative">
+                    <input id="availableOnly" type="checkbox" class="sr-only peer">
+                    <div class="w-9 h-5 bg-stone-200 peer-checked:bg-amber-500 rounded-full transition-colors"></div>
+                    <div class="absolute top-0.5 left-0.5 w-4 h-4 bg-white rounded-full shadow transition-transform peer-checked:translate-x-4"></div>
+                </div>
+                <span class="text-xs text-stone-500 font-medium">Available only</span>
+            </label>
+        </div>
+
+        <!-- Items list -->
+        <div id="itemsList" class="space-y-3"></div>
+
+        <!-- Footer -->
+        <div class="mt-10 pt-6 border-t border-stone-200 text-center">
+            <p class="text-xs text-stone-400">
+                Powered by
+                <a href="/index.html" class="text-amber-500 hover:underline font-semibold">MenuGate</a>
+                · <a href="/oauth2/authorization/google" class="text-stone-400 hover:text-stone-600 hover:underline">Sign in to create your own</a>
+            </p>
+        </div>
+    </div>
+</main>
+
+<script type="module">
+    let allItems = [];
+
+    async function load() {
+        const params = new URLSearchParams(window.location.search);
+        const id = params.get('id');
+
+        if (!id) { showError(); return; }
+
+        const res = await fetch(`/api/menus/${id}`, { credentials: 'include' });
+
+        document.getElementById('loadingState').classList.add('hidden');
+
+        if (!res.ok) { showError(); return; }
+
+        const menu = await res.json();
+        allItems = menu.items || [];
+
+        // Populate header
+        document.getElementById('menuTitle').textContent = menu.title;
+        document.title = `${menu.title} — MenuGate`;
+
+        const countEl = document.getElementById('menuItemCount');
+        countEl.textContent = `${allItems.length} item${allItems.length !== 1 ? 's' : ''}`;
+
+        if (menu.category) {
+            const catEl = document.getElementById('menuCategory');
+            catEl.textContent = menu.category;
+            catEl.classList.remove('hidden');
+        }
+
+        document.getElementById('menuContent').classList.remove('hidden');
+        renderItems(false);
+    }
+
+    function renderItems(availableOnly) {
+        const list = document.getElementById('itemsList');
+        const items = availableOnly ? allItems.filter(i => i.available) : allItems;
+
+        if (items.length === 0) {
+            list.innerHTML = `<div class="text-center py-10 text-stone-400">
+                <p class="text-sm">${availableOnly ? 'No available items right now.' : 'No items on this menu yet.'}</p>
+            </div>`;
+            return;
+        }
+
+        list.innerHTML = items.map(item => `
+            <div class="bg-white rounded-xl shadow-sm p-4 flex items-start justify-between gap-4
+                        ${!item.available ? 'opacity-50' : ''}">
+                <div class="flex-1 min-w-0">
+                    <div class="flex items-center gap-2">
+                        <h3 class="font-bold text-stone-900 text-sm sm:text-base">${esc(item.name)}</h3>
+                        ${!item.available ? `<span class="text-xs bg-stone-100 text-stone-400 px-2 py-0.5 rounded-full">Unavailable</span>` : ''}
+                    </div>
+                    ${item.description ? `<p class="text-xs sm:text-sm text-stone-500 mt-1 leading-relaxed">${esc(item.description)}</p>` : ''}
+                </div>
+                <span class="text-base sm:text-lg font-black text-amber-600 flex-shrink-0">
+                    $${Number(item.price).toFixed(2)}
+                </span>
+            </div>
+        `).join('');
+    }
+
+    document.getElementById('availableOnly').addEventListener('change', function () {
+        renderItems(this.checked);
+    });
+
+    function showError() {
+        document.getElementById('loadingState').classList.add('hidden');
+        document.getElementById('errorState').classList.remove('hidden');
+    }
+
+    function esc(str) {
+        if (!str) return '';
+        return str.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+    }
+
+    load();
+</script>
+</body>
+</html>
