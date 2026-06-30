@@ -131,6 +131,32 @@
     </div>
   </div>
 
+  <!-- ── Notice banner (reads ?notice= query param set by admin.js redirect) ── -->
+  <script>
+    (function () {
+      var notice = new URLSearchParams(window.location.search).get('notice');
+      if (!notice) return;
+      document.addEventListener('DOMContentLoaded', function () {
+        var main = document.getElementById('main-content');
+        var messages = {
+          admin_required: 'Admin access is required to view that page.',
+          login_required: 'Please log in to continue.',
+        };
+        var isError = notice === 'admin_required';
+        var div = document.createElement('div');
+        div.className = 'mg-alert ' + (isError ? 'mg-alert--error' : 'mg-alert--warning');
+        div.setAttribute('role', 'alert');
+        div.style.marginBottom = 'var(--space-5)';
+        div.textContent = messages[notice] || 'Something went wrong.';
+        main.insertBefore(div, main.firstChild);
+        // Remove the param from the URL so a refresh doesn't re-show it.
+        var clean = new URL(window.location.href);
+        clean.searchParams.delete('notice');
+        history.replaceState(null, '', clean);
+      });
+    }());
+  </script>
+
   <!-- ── Scripts — load order matters ── -->
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
   <script src="js/config.js"></script>
