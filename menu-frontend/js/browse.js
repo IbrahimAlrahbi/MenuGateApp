@@ -43,6 +43,10 @@
     _modalBody      = document.getElementById('menuDetailBody');
     _bsModal        = new bootstrap.Modal(_modalEl);
 
+    // Show skeleton immediately — before any async work — so the page
+    // never flashes blank during the auth check + data fetch.
+    showLoadingSkeleton();
+
     // Auth is non-fatal on a public page — nav simply shows "Log in"
     // if the check fails or /api/me doesn't exist yet.
     try {
@@ -106,6 +110,10 @@
 
   /** Populate the category <select> with sorted unique values from menus. */
   function buildCategoryOptions(menus) {
+    // Clear any previously added options (e.g. after a retry) while
+    // keeping the "All categories" placeholder at index 0.
+    while (_categorySelect.options.length > 1) _categorySelect.remove(1);
+
     const seen = new Set();
     menus.forEach(m => { if (m.category) seen.add(m.category); });
 
@@ -292,8 +300,7 @@
             : ''}
         </div>
         <div class="menu-item-row__right">
-          <span class="price price--lg"
-                aria-label="Price: ${escapeHtml(formattedPrice)}">
+          <span class="price price--lg">
             ${escapeHtml(formattedPrice)}
           </span>
           ${availBadge}
@@ -311,8 +318,9 @@
 
   /** Show 6 skeleton card placeholders while the initial fetch runs. */
   function showLoadingSkeleton() {
-    _grid.innerHTML      = '';
-    _resultsCount.textContent = '';
+    _grid.innerHTML = '';
+    // Announce loading state to screen readers via the live region.
+    _resultsCount.textContent = 'Loading menus…';
 
     for (let i = 0; i < 6; i++) {
       const li  = document.createElement('li');

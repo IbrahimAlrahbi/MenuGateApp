@@ -95,6 +95,9 @@
     _confirmBody      = document.getElementById('confirmBody');
     _confirmDeleteBtn = document.getElementById('confirmDeleteBtn');
 
+    // Show spinner immediately so the page is never blank during auth check.
+    showListLoading();
+
     // ── Auth guard ─────────────────────────────────────
     let user;
     try {

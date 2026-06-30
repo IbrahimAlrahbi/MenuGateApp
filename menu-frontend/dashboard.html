@@ -26,7 +26,7 @@
       </a>
       <div class="mg-nav__links">
         <a href="index.html" class="mg-nav__link">Browse</a>
-        <a href="dashboard.html" class="mg-nav__link mg-nav__link--active" aria-current="page">Dashboard</a>
+        <!-- Dashboard / Admin links are injected by auth.js so they never duplicate -->
       </div>
       <div class="mg-nav__auth" data-nav-auth aria-label="Account actions"></div>
     </div>
@@ -47,7 +47,8 @@
     </div>
 
     <!-- Menu list — loading/empty/error/cards rendered here -->
-    <div id="menu-list" aria-live="polite"></div>
+    <!-- aria-live omitted: toasts (role="alert"/"status") announce CRUD outcomes -->
+    <div id="menu-list"></div>
 
   </main>
 

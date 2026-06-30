@@ -47,6 +47,9 @@
     _confirmBody      = document.getElementById('confirmBody');
     _confirmDeleteBtn = document.getElementById('confirmDeleteBtn');
 
+    // Show table loading immediately so the page is never blank during auth check.
+    showTableLoading();
+
     // ── Auth guard ─────────────────────────────────────
     let user;
     try {
