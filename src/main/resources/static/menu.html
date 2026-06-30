@@ -6,7 +6,7 @@
     <title>Menu — MenuGate</title>
     <script src="https://cdn.tailwindcss.com"></script>
 </head>
-<body class="bg-stone-50 min-h-screen">
+<body class="bg-stone-50 min-h-screen" style="zoom: 0.8;">
 
 <!-- Header -->
 <header class="bg-white border-b border-stone-200">
@@ -138,8 +138,8 @@
                     </div>
                     ${item.description ? `<p class="text-xs sm:text-sm text-stone-500 mt-1 leading-relaxed">${esc(item.description)}</p>` : ''}
                 </div>
-                <span class="text-base sm:text-lg font-black text-amber-600 flex-shrink-0">
-                    $${Number(item.price).toFixed(2)}
+                <span class="text-base sm:text-lg font-black text-stone-800 flex-shrink-0 flex items-center gap-1.5">
+                    <img src="/assets/pics/light.png" class="h-5 w-auto opacity-80" alt="OMR">${Number(item.price).toFixed(3)}
                 </span>
             </div>
         `).join('');

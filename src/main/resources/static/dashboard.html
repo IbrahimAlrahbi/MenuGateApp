@@ -6,7 +6,7 @@
     <title>Dashboard — MenuGate</title>
     <script src="https://cdn.tailwindcss.com"></script>
 </head>
-<body class="bg-stone-50 min-h-screen">
+<body class="bg-stone-50 min-h-screen" style="zoom: 0.8;">
 
 <!-- Navbar -->
 <nav class="bg-white border-b border-stone-200 sticky top-0 z-40">
@@ -100,9 +100,9 @@
             <div>
                 <label class="block text-sm font-semibold text-stone-700 mb-1.5">Price <span class="text-red-400">*</span></label>
                 <div class="relative">
-                    <span class="absolute left-4 top-1/2 -translate-y-1/2 text-stone-400 font-medium text-sm">$</span>
-                    <input id="itemPriceInput" type="number" step="0.01" min="0.01" placeholder="0.00"
-                           class="w-full border border-stone-300 rounded-xl pl-8 pr-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-amber-400 focus:border-transparent transition-shadow">
+                    <img src="/assets/pics/light.png" class="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-auto opacity-40 pointer-events-none" alt="OMR">
+                    <input id="itemPriceInput" type="number" step="0.001" min="0.001" placeholder="0.000"
+                           class="w-full border border-stone-300 rounded-xl pl-9 pr-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-amber-400 focus:border-transparent transition-shadow">
                 </div>
             </div>
         </div>
@@ -248,7 +248,7 @@ function itemsHtml(m) {
                 ${item.description ? `<p class="text-xs text-stone-400 mt-0.5 line-clamp-1">${esc(item.description)}</p>` : ''}
             </div>
             <div class="flex items-center gap-2 flex-shrink-0">
-                <span class="text-sm font-bold text-amber-600">$${Number(item.price).toFixed(2)}</span>
+                <span class="text-sm font-bold text-stone-800 flex items-center gap-1"><img src="/assets/pics/light.png" class="h-3.5 w-auto opacity-80" alt="OMR">${Number(item.price).toFixed(3)}</span>
                 <button data-action="edit-item" data-menu="${m.menuId}" data-item="${item.menuItemId}"
                         class="text-xs text-stone-400 hover:text-amber-500 transition-colors">Edit</button>
                 <button data-action="delete-item" data-menu="${m.menuId}" data-item="${item.menuItemId}"
