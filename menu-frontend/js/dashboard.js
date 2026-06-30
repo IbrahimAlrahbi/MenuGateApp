@@ -23,6 +23,7 @@
 (function () {
   'use strict';
 
+
   const { MenuGateApi, MenuGateAuth } = window;
   const { ERROR_TYPE } = MenuGateApi;
 
