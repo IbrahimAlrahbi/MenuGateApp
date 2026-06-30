@@ -408,6 +408,11 @@ small,
   border-radius: inherit;
 }
 
+/* Collapsible items section inside a dashboard card */
+.items-section {
+  border-top: 1px solid var(--color-border);
+}
+
 /* Menu item row inside a card */
 .menu-item-row {
   display: flex;
