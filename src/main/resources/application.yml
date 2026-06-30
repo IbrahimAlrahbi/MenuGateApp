@@ -1,0 +1,6 @@
+spring:
+  application:
+    name: menu-gate-app
+
+server:
+  port: 8888
