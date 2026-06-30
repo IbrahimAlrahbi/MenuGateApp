@@ -2,7 +2,7 @@ spring:
   application:
     name: menu-gate-app
   datasource:
-    url: jdbc:oracle:thin:@//localhost:1521/FREEPDB1
+    url: jdbc:oracle:thin:@localhost:1521/FREEPDB1
     username: SYSTEM
     password: ${DB_PASSWORD}
     driver-class-name: oracle.jdbc.OracleDriver
